@@ -44,32 +44,6 @@
   [{:keys [current-dir] :as state} [_ [_ file-size] _ [_ file-name]]]
   (update-in state (cons :tree current-dir) #(assoc % file-name (parse-long file-size))))
 
-(def input
-  (->> "$ cd /
-$ ls
-dir a
-14848514 b.txt
-8504156 c.dat
-dir d
-$ cd a
-$ ls
-dir e
-29116 f
-2557 g
-62596 h.lst
-$ cd e
-$ ls
-584 i
-$ cd ..
-$ cd ..
-$ cd d
-$ ls
-4060174 j
-8033020 d.log
-5626152 d.ext
-7214296 k"
-       str/split-lines (map log-parser)))
-
 (defn- calulate-directory-sizes
   [tree]
   (->> tree
@@ -85,8 +59,42 @@ $ ls
              (assoc % :size (+ files-size dirs-size)))
            %))))
 
+
+(defn directory-seq
+  [tree]
+  (when (map? tree)
+    (let [subdirs (filter (fn [[k v]] (map? v)) tree)]
+      (apply concat
+             (map (fn [[k v]] [k (:size v)]) subdirs)
+             (map directory-seq (vals subdirs))))))
+
+
 (->> input
      (map second)
      (reduce apply-log-line {:tree {} :current-dir []})
      :tree
-     calulate-directory-sizes)
+     calulate-directory-sizes
+     directory-seq
+     (map second)
+     (filter #(<= % 100000))
+     (reduce +))
+
+;; => 1118405
+
+(let [tree (->> input
+                (map second)
+                (reduce apply-log-line {:tree {} :current-dir []})
+                :tree
+                calulate-directory-sizes)
+      used (get-in tree ["/" :size])
+      free (- 70000000 used)
+      needed (- 30000000 free)
+      dirs (->> tree directory-seq (sort-by second))
+      _ (prn used free needed)]
+
+  (->> dirs
+       (filter (fn [[name size]] (>= size needed)))
+       first
+       second))
+
+;; => 12545514
