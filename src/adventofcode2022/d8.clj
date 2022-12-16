@@ -1,8 +1,7 @@
 (ns adventofcode2022.d8
   (:require [clojure.java.io :as io]
             [medley.core :refer [take-upto]]
-            [clojure.string :as str]
-            [clojure.test :refer [is]]))
+            [clojure.string :as str]))
 
 (defn- parse
   [s]
@@ -25,23 +24,6 @@
      (every? lower? (for [xv (range (inc x) (count (first board)))] [xv y]))
      (every? lower? (for [yv (range y)] [x yv]))
      (every? lower? (for [yv (range (inc y) (count board))] [x yv])))))
-
-(def test-input
-  (parse "30373
-25512
-65332
-33549
-35390"))
-
-(is (visible? test-input 1 1))
-(is (visible? test-input 2 1))
-(is (not (visible? test-input 3 1)))
-(is (visible? test-input 1 2))
-(is (not (visible? test-input 2 2)))
-(is (visible? test-input 3 2))
-(is (visible? test-input 2 3))
-(is (not (visible? test-input 1 3)))
-(is (not (visible? test-input 3 3)))
 
 (def input
   (->> (io/resource "8.txt") slurp parse))
